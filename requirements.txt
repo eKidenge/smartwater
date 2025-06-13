@@ -4,3 +4,5 @@ whitenoise
 dj-database-url
 numpy
 wntr
+scipy
+matplotlib
