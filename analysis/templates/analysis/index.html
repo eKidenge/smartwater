@@ -1,0 +1,359 @@
+{% extends 'analysis/base.html' %}
+
+{% block content %}
+<style>
+  /* ===== Main Styles ===== */
+  :root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --dark-color: #2c3e50;
+    --light-color: #ecf0f1;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+    --info-color: #1abc9c;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+  }
+
+  /* ===== Base Styles ===== */
+  .network-dashboard {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: #333;
+  }
+
+  .dashboard-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .dashboard-title {
+    font-size: 2.5rem;
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+
+  .dashboard-subtitle {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    font-weight: 400;
+  }
+
+  /* ===== Network Section ===== */
+  .network-section {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-header h2 {
+    font-size: 1.8rem;
+    color: var(--dark-color);
+    margin: 0;
+  }
+
+  /* ===== Network Table ===== */
+  .network-table-container {
+    overflow-x: auto;
+  }
+
+  .network-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+
+  .network-table th {
+    background-color: var(--dark-color);
+    color: white;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 500;
+  }
+
+  .network-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+  }
+
+  .network-table tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  .network-description {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  /* ===== Status Badges ===== */
+  .status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  .status-ready, .status-completed {
+    background-color: rgba(46, 204, 113, 0.2);
+    color: var(--secondary-color);
+  }
+
+  .status-pending, .status-processing {
+    background-color: rgba(241, 196, 15, 0.2);
+    color: var(--warning-color);
+  }
+
+  .status-error, .status-failed {
+    background-color: rgba(231, 76, 60, 0.2);
+    color: var(--danger-color);
+  }
+
+  /* ===== Buttons ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    text-decoration: none;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+  }
+
+  .btn i {
+    margin-right: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+  }
+
+  .btn-secondary:hover {
+    background-color: #d5dbdb;
+    transform: translateY(-2px);
+  }
+
+  .btn-analyze {
+    background-color: var(--secondary-color);
+    color: white;
+  }
+
+  .btn-analyze:hover {
+    background-color: #27ae60;
+    transform: translateY(-2px);
+  }
+
+  .btn-info {
+    background-color: var(--info-color);
+    color: white;
+  }
+
+  .btn-info:hover {
+    background-color: #16a085;
+    transform: translateY(-2px);
+  }
+
+  .actions {
+    white-space: nowrap;
+  }
+
+  /* ===== Empty State ===== */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background-color: #f8f9fa;
+    border-radius: var(--border-radius);
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    color: #bdc3c7;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state h3 {
+    color: var(--dark-color);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-state p {
+    color: #7f8c8d;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ===== Quick Actions ===== */
+  .quick-actions {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 1.5rem 2rem;
+  }
+
+  .quick-actions h3 {
+    font-size: 1.5rem;
+    color: var(--dark-color);
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* ===== Responsive Design ===== */
+  @media (max-width: 768px) {
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .action-buttons {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .network-table th, 
+    .network-table td {
+      padding: 0.75rem 0.5rem;
+    }
+  }
+</style>
+
+<div class="network-dashboard">
+  <header class="dashboard-header">
+    <h1 class="dashboard-title">Water Network Management</h1>
+    <p class="dashboard-subtitle">View and analyze your uploaded water distribution networks</p>
+  </header>
+
+  <section class="network-section">
+    <div class="section-header">
+      <h2>Your Water Networks</h2>
+      <a href="{% url 'analysis:upload_network' %}" class="btn btn-primary">
+        <i class="fas fa-upload"></i> Upload New Network
+      </a>
+    </div>
+
+    {% if networks %}
+    <div class="network-table-container">
+      <table class="network-table">
+        <thead>
+          <tr>
+            <th>Network Name</th>
+            <th>Upload Date</th>
+            <th>File Size</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for network in networks %}
+          <tr>
+            <td>
+              <strong>{{ network.name }}</strong>
+              {% if network.description %}
+                <p class="network-description">{{ network.description }}</p>
+              {% endif %}
+            </td>
+            <td>{{ network.uploaded_at|date:"d M Y H:i" }}</td>
+            <td>{{ network.file.size|filesizeformat }}</td>
+            <td>
+              <span class="status-badge status-{{ network.status|default:'ready'|lower }}">
+                {{ network.status|default:"Ready" }}
+              </span>
+            </td>
+            <td class="actions">
+              <a href="{% url 'analysis:hydraulic_analysis' network.id %}" class="btn btn-analyze">
+                <i class="fas fa-chart-bar"></i> Analyze
+              </a>
+              <a href="{% url 'analysis:hydraulic_analysis' network.id %}" class="btn btn-info">
+                <i class="fas fa-eye"></i> View
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+      <div class="pagination">
+        <!-- Add pagination controls here if needed -->
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-project-diagram"></i>
+      </div>
+      <h3>No Networks Uploaded Yet</h3>
+      <p>Get started by uploading your first water network model</p>
+      <a href="{% url 'analysis:upload_network' %}" class="btn btn-primary">
+        <i class="fas fa-upload"></i> Upload Network
+      </a>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="quick-actions">
+    <h3>Quick Actions</h3>
+    <div class="action-buttons">
+      <a href="{% url 'analysis:upload_network' %}" class="btn btn-secondary">
+        <i class="fas fa-file-import"></i> Import Network
+      </a>
+      {% if 'analysis.create_network' in perms %}
+      <a href="{% url 'analysis:create_network' %}" class="btn btn-secondary">
+        <i class="fas fa-plus-circle"></i> Create New Network
+      </a>
+      {% endif %}
+      <a href="#" class="btn btn-secondary">
+        <i class="fas fa-book"></i> Documentation
+      </a>
+    </div>
+  </section>
+</div>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}

@@ -1,0 +1,870 @@
+{% extends 'analysis/base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="analysis-container">
+  <div class="analysis-header">
+    <h1><i class="fas fa-chart-bar"></i> Comprehensive Analysis Results</h1>
+    <p class="subtitle">Integrated metrics for {{ network.name }}</p>
+  </div>
+
+  <!-- Summary Cards Row -->
+  <div class="results-grid">
+    <!-- Hydraulic Analysis Summary -->
+    <div class="result-card hydraulic-card">
+      <div class="card-header">
+        <i class="fas fa-tachometer-alt"></i>
+        <h2>Hydraulic Performance</h2>
+      </div>
+      <div class="card-body">
+        <div class="metric">
+          <span class="metric-value">{{ pressure_stats.avg|floatformat:2 }} psi</span>
+          <span class="metric-label">Average Pressure</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric">
+            <span class="metric-value">{{ node_count }}</span>
+            <span class="metric-label">Nodes</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value">{{ link_count }}</span>
+            <span class="metric-label">Pipes</span>
+          </div>
+        </div>
+        <div class="pressure-visual">
+          <div class="pressure-bar" style="width: 100%; background: linear-gradient(to right, #e74c3c, #f39c12, #2ecc71);">
+            <div class="pressure-indicator" style="left: {% widthratio pressure_stats.avg pressure_stats.max 100 %}%"></div>
+          </div>
+          <div class="pressure-labels">
+            <span>{{ pressure_stats.min|floatformat:0 }}</span>
+            <span>{{ pressure_stats.max|floatformat:0 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Valve Optimization Summary -->
+    <div class="result-card valve-card">
+      <div class="card-header">
+        <i class="fas fa-valve"></i>
+        <h2>Valve Optimization</h2>
+      </div>
+      <div class="card-body">
+        <div class="metric">
+          <span class="metric-value">{{ valves|length }}</span>
+          <span class="metric-label">Recommended Valves</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric">
+            <span class="metric-value">{{ improvement_stats.pressure_variation_reduction|floatformat:1 }}%</span>
+            <span class="metric-label">Pressure Reduction</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value">{{ improvement_stats.energy_savings|floatformat:1 }}%</span>
+            <span class="metric-label">Energy Savings</span>
+          </div>
+        </div>
+        <div class="priority-distribution">
+          <canvas id="valvePriorityChart" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- MPC Control Summary -->
+    <div class="result-card mpc-card">
+      <div class="card-header">
+        <i class="fas fa-cogs"></i>
+        <h2>MPC Control</h2>
+      </div>
+      <div class="card-body">
+        <div class="metric">
+          <span class="metric-value">{{ result.performance_metrics.demand_coverage|floatformat:1 }}%</span>
+          <span class="metric-label">Demand Coverage</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric">
+            <span class="metric-value">{{ result.performance_metrics.energy_savings|floatformat:1 }}%</span>
+            <span class="metric-label">Energy Savings</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value">{{ result.performance_metrics.pressure_variation|floatformat:1 }} m</span>
+            <span class="metric-label">Pressure Variation</span>
+          </div>
+        </div>
+        <div class="mpc-performance">
+          <canvas id="mpcPerformanceChart" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Charts Section -->
+  <div class="detailed-results">
+    <div class="section-header">
+      <h3><i class="fas fa-chart-line"></i> Performance Comparison</h3>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-container">
+        <h4>Pressure Comparison (Before/After)</h4>
+        <canvas id="pressureComparisonChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h4>Flow Rate Optimization</h4>
+        <canvas id="flowOptimizationChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-row full-width">
+      <div class="chart-container">
+        <h4>Demand vs Control (MPC)</h4>
+        <canvas id="demandControlChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Data Tables -->
+  <div class="detailed-results">
+    <div class="section-header">
+      <h3><i class="fas fa-table"></i> Detailed Results</h3>
+      <div class="export-actions">
+        <button class="btn btn-export" id="exportAllData">
+          <i class="fas fa-file-csv"></i> Export All Data
+        </button>
+      </div>
+    </div>
+
+    <div class="results-tabs">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="hydraulic-tab">Hydraulic</button>
+        <button class="tab-btn" data-tab="valve-tab">Valve Optimization</button>
+        <button class="tab-btn" data-tab="mpc-tab">MPC Control</button>
+      </div>
+
+      <!-- Hydraulic Results Tab -->
+      <div class="tab-content active" id="hydraulic-tab">
+        <div class="table-container">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Node ID</th>
+                <th>Pressure (psi)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for node_id, pressure in pressures.items %}
+              <tr>
+                <td>{{ node_id }}</td>
+                <td>{{ pressure|floatformat:2 }}</td>
+                <td>
+                  <span class="status-badge {% if pressure < 20 %}status-warning{% elif pressure > 80 %}status-danger{% else %}status-success{% endif %}">
+                    {% if pressure < 20 %}Low{% elif pressure > 80 %}High{% else %}Normal{% endif %}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Valve Optimization Tab -->
+      <div class="tab-content" id="valve-tab">
+        <div class="table-container">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Location</th>
+                <th>Pipe ID</th>
+                <th>Pressure Reduction</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for valve in valves %}
+              <tr>
+                <td>{{ valve.location }}</td>
+                <td>{{ valve.pipe_id }}</td>
+                <td>{{ valve.pressure_reduction|floatformat:2 }} m</td>
+                <td>
+                  <span class="status-badge priority-{{ valve.priority|lower }}">
+                    {{ valve.priority }}
+                  </span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MPC Control Tab -->
+      <div class="tab-content" id="mpc-tab">
+        <div class="table-container">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Hour</th>
+                <th>Forecast Demand</th>
+                <th>Optimal Control</th>
+                <th>Deviation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for hour in hourly_data %}
+              <tr>
+                <td>{{ hour.hour }}</td>
+                <td>{{ hour.forecast|floatformat:2 }}</td>
+                <td>{{ hour.control|floatformat:2 }}</td>
+                <td class="{% if hour.deviation >= 0 %}positive{% else %}negative{% endif %}">
+                  {{ hour.deviation|floatformat:2 }}%
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ===== Enhanced Analysis Page Styles ===== */
+  .analysis-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem 2rem;
+  }
+
+  .analysis-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .analysis-header h1 {
+    font-size: 2.2rem;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+  }
+
+  /* Results Grid Layout */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  /* Card Styles */
+  .result-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+  }
+
+  .result-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .hydraulic-card {
+    border-top: 4px solid #e74c3c;
+  }
+
+  .valve-card {
+    border-top: 4px solid #3498db;
+  }
+
+  .mpc-card {
+    border-top: 4px solid #2ecc71;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eee;
+  }
+
+  .card-header h2 {
+    font-size: 1.3rem;
+    color: #2c3e50;
+    margin: 0;
+  }
+
+  .card-header i {
+    font-size: 1.5rem;
+  }
+
+  .hydraulic-card .card-header i {
+    color: #e74c3c;
+  }
+
+  .valve-card .card-header i {
+    color: #3498db;
+  }
+
+  .mpc-card .card-header i {
+    color: #2ecc71;
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+
+  /* Metrics Styling */
+  .metric {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
+
+  .metric-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .metric-row .metric {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  .metric-value {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  .metric-label {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+  }
+
+  /* Pressure Visual */
+  .pressure-visual {
+    margin-top: 1.5rem;
+    position: relative;
+  }
+
+  .pressure-bar {
+    height: 10px;
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+    position: relative;
+  }
+
+  .pressure-indicator {
+    position: absolute;
+    top: -5px;
+    width: 3px;
+    height: 20px;
+    background: #2c3e50;
+    transform: translateX(-50%);
+  }
+
+  .pressure-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #7f8c8d;
+  }
+
+  /* Chart Containers */
+  .priority-distribution,
+  .mpc-performance {
+    margin-top: 1rem;
+    height: 120px;
+  }
+
+  /* Detailed Results Sections */
+  .detailed-results {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-header h3 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+  }
+
+  /* Chart Rows */
+  .chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .chart-row.full-width {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-container {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+
+  .chart-container h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+    font-size: 1.1rem;
+  }
+
+  .chart-container canvas {
+    width: 100% !important;
+    height: 300px !important;
+  }
+
+  /* Tabs */
+  .results-tabs {
+    margin-top: 1rem;
+  }
+
+  .tabs-header {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1rem;
+  }
+
+  .tab-btn {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-weight: 500;
+    color: #7f8c8d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .tab-btn.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+  }
+
+  .tab-btn:hover:not(.active) {
+    color: #2c3e50;
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* Results Table */
+  .table-container {
+    overflow-x: auto;
+  }
+
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+
+  .results-table th {
+    background-color: #2c3e50;
+    color: white;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 500;
+  }
+
+  .results-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+  }
+
+  .results-table tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  /* Status Badges */
+  .status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .status-success {
+    background-color: rgba(46, 204, 113, 0.2);
+    color: #27ae60;
+  }
+
+  .status-warning {
+    background-color: rgba(241, 196, 15, 0.2);
+    color: #f39c12;
+  }
+
+  .status-danger {
+    background-color: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+  }
+
+  .priority-high {
+    background-color: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+  }
+
+  .priority-medium {
+    background-color: rgba(241, 196, 15, 0.2);
+    color: #f39c12;
+  }
+
+  .priority-low {
+    background-color: rgba(46, 204, 113, 0.2);
+    color: #27ae60;
+  }
+
+  .positive {
+    color: #27ae60;
+  }
+
+  .negative {
+    color: #e74c3c;
+  }
+
+  /* Export Button */
+  .btn-export {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .btn-export:hover {
+    background-color: #1a252f;
+  }
+
+  /* ===== Responsive Design ===== */
+  @media (max-width: 992px) {
+    .chart-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .tabs-header {
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+
+    .tab-btn {
+      white-space: nowrap;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .analysis-header h1 {
+      font-size: 1.8rem;
+    }
+
+    .metric-value {
+      font-size: 1.5rem;
+    }
+
+    .card-header h2 {
+      font-size: 1.1rem;
+    }
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Tab functionality
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  tabButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      // Remove active class from all buttons and content
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      // Add active class to clicked button and corresponding content
+      this.classList.add('active');
+      const tabId = this.getAttribute('data-tab');
+      document.getElementById(tabId).classList.add('active');
+    });
+  });
+
+  // Valve Priority Chart
+  const valvePriorityCtx = document.getElementById('valvePriorityChart').getContext('2d');
+  const valvePriorityChart = new Chart(valvePriorityCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['High', 'Medium', 'Low'],
+      datasets: [{
+        data: [
+          {{ valves|filter_priority:"High"|length }},
+          {{ valves|filter_priority:"Medium"|length }},
+          {{ valves|filter_priority:"Low"|length }}
+        ],
+        backgroundColor: [
+          'rgba(231, 76, 60, 0.8)',
+          'rgba(241, 196, 15, 0.8)',
+          'rgba(46, 204, 113, 0.8)'
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right'
+        }
+      },
+      cutout: '70%'
+    }
+  });
+
+  // MPC Performance Chart
+  const mpcPerformanceCtx = document.getElementById('mpcPerformanceChart').getContext('2d');
+  const mpcPerformanceChart = new Chart(mpcPerformanceCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Demand Coverage', 'Energy Savings', 'Pressure Control'],
+      datasets: [{
+        data: [
+          {{ result.performance_metrics.demand_coverage }},
+          {{ result.performance_metrics.energy_savings }},
+          100 - {{ result.performance_metrics.pressure_variation }}
+        ],
+        backgroundColor: [
+          'rgba(52, 152, 219, 0.8)',
+          'rgba(46, 204, 113, 0.8)',
+          'rgba(155, 89, 182, 0.8)'
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    }
+  });
+
+  // Pressure Comparison Chart
+  const pressureComparisonCtx = document.getElementById('pressureComparisonChart').getContext('2d');
+  const pressureComparisonChart = new Chart(pressureComparisonCtx, {
+    type: 'bar',
+    data: {
+      labels: {{ pressure_comparison.labels|safe }},
+      datasets: [
+        {
+          label: 'Before Optimization',
+          data: {{ pressure_comparison.original|safe }},
+          backgroundColor: 'rgba(231, 76, 60, 0.7)'
+        },
+        {
+          label: 'After Optimization',
+          data: {{ pressure_comparison.optimized|safe }},
+          backgroundColor: 'rgba(46, 204, 113, 0.7)'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: false,
+          title: {
+            display: true,
+            text: 'Pressure (psi)'
+          }
+        }
+      }
+    }
+  });
+
+  // Flow Optimization Chart
+  const flowOptimizationCtx = document.getElementById('flowOptimizationChart').getContext('2d');
+  const flowOptimizationChart = new Chart(flowOptimizationCtx, {
+    type: 'line',
+    data: {
+      labels: Array.from({length: 24}, (_, i) => i),
+      datasets: [
+        {
+          label: 'Original Flow',
+          data: Array.from({length: 24}, () => Math.random() * 50 + 20),
+          borderColor: '#e74c3c',
+          backgroundColor: 'rgba(231, 76, 60, 0.1)',
+          tension: 0.3
+        },
+        {
+          label: 'Optimized Flow',
+          data: Array.from({length: 24}, () => Math.random() * 30 + 30),
+          borderColor: '#2ecc71',
+          backgroundColor: 'rgba(46, 204, 113, 0.1)',
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: false,
+          title: {
+            display: true,
+            text: 'Flow Rate (gpm)'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Hour'
+          }
+        }
+      }
+    }
+  });
+
+  // Demand vs Control Chart
+  const demandControlCtx = document.getElementById('demandControlChart').getContext('2d');
+  const demandControlChart = new Chart(demandControlCtx, {
+    type: 'line',
+    data: {
+      labels: {{ demand_control_comparison.hours|safe }},
+      datasets: [
+        {
+          label: 'Demand Forecast',
+          data: {{ demand_control_comparison.forecast_demand|safe }},
+          borderColor: '#3498db',
+          backgroundColor: 'rgba(52, 152, 219, 0.1)',
+          tension: 0.3
+        },
+        {
+          label: 'Optimal Control',
+          data: {{ demand_control_comparison.controlled_flow|safe }},
+          borderColor: '#9b59b6',
+          backgroundColor: 'rgba(155, 89, 182, 0.1)',
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Flow Rate (m³/h)'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Time (hours)'
+          }
+        }
+      }
+    }
+  });
+
+  // Export All Data functionality
+  document.getElementById('exportAllData').addEventListener('click', function() {
+    // Create CSV content
+    let csvContent = "data:text/csv;charset=utf-8,";
+    
+    // Hydraulic Data
+    csvContent += "Hydraulic Analysis Results\n";
+    csvContent += "Node ID,Pressure (psi),Status\n";
+    {% for node_id, pressure in pressures.items %}
+    csvContent += `"{{ node_id }}",{{ pressure|floatformat:2 }},{% if pressure < 20 %}Low{% elif pressure > 80 %}High{% else %}Normal{% endif %}\n`;
+    {% endfor %}
+    
+    // Valve Data
+    csvContent += "\nValve Optimization Results\n";
+    csvContent += "Location,Pipe ID,Pressure Reduction,Priority\n";
+    {% for valve in valves %}
+    csvContent += `"{{ valve.location }}","{{ valve.pipe_id }}",{{ valve.pressure_reduction|floatformat:2 }},"{{ valve.priority }}"\n`;
+    {% endfor %}
+    
+    // MPC Data
+    csvContent += "\nMPC Control Results\n";
+    csvContent += "Hour,Forecast Demand,Optimal Control,Deviation\n";
+    {% for hour in hourly_data %}
+    csvContent += `{{ hour.hour }},{{ hour.forecast|floatformat:2 }},{{ hour.control|floatformat:2 }},{{ hour.deviation|floatformat:2 }}\n`;
+    {% endfor %}
+    
+    // Create download link
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "water_network_analysis_results.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+});
+</script>
+{% endblock %}

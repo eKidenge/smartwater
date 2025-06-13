@@ -1,0 +1,289 @@
+; Filename: /home/computer-scientist/Desktop/smartwater/networks/2025/06/13/omwasco_GvSXrub.inp
+; WNTR: 1.3.2
+; Created: 2025-06-13 22:36:33
+[TITLE]
+
+[JUNCTIONS]
+;ID                      Elevation       Demand Pattern                 
+ J-1                             1778               0                            ;
+ J-2                             1776               0                            ;
+ J-3                             1776               0                            ;
+ J-4                             1779               0                            ;
+ J-5                             1758               0                            ;
+ J-6                             1753               0                            ;
+ J-7                             1768               0                            ;
+ J-8                             1774               0                            ;
+ J-9                             1771               0                            ;
+ J-10                            1711               0                            ;
+ J-11                            1703             0.7                            ;
+ J-12                            1777            0.07                            ;
+ J-13                            1737            0.87                            ;
+ J-14                            1775            0.36                            ;
+ J-15                            1774            4.38                            ;
+ J-16                            1758            0.19                            ;
+ J-17                            1753            0.26                            ;
+ J-18                            1700            0.81                            ;
+ J-19                            1718             0.7                            ;
+ J-20                            1771            0.26                            ;
+ J-21                            1711           0.017                            ;
+ J-22                            1779               0                            ;
+ J-24                            1688               0                            ;
+ J-25                            1688               0                            ;
+ J-26                            1717               0                            ;
+ J-27                            1688               0                            ;
+ J-28                            1688               0                            ;
+ J-29                            1688               0                            ;
+ J-30                            1688               0                            ;
+ J-31                            1709               0                            ;
+ J-32                            1700               0                            ;
+ J-33                            1699               0                            ;
+ J-34                            1708               0                            ;
+ J-35                            1708            0.48                            ;
+ J-36                            1708            0.58                            ;
+ J-37                            1688            0.42                            ;
+ J-38                            1688            0.04                            ;
+ J-39                            1717            0.15                            ;
+ J-40                            1688            0.08                            ;
+ J-41                            1688            0.08                            ;
+ J-42                            1688            0.02                            ;
+ J-43                            1703            0.39                            ;
+ J-44                            1709            0.14                            ;
+ J-45                            1700             0.3                            ;
+ J-46                            1699             0.3                            ;
+
+[RESERVOIRS]
+;ID                                   Head                  Pattern
+ R-1                             1899                            ;
+
+[TANKS]
+;ID                              Elevation           Init Level            Min Level            Max Level             Diameter           Min Volume Volume Curve         Overflow            
+ ST-1                            1808               2               1               5              10               0                                             ;
+
+[PIPES]
+;ID                   Node1                Node2                              Length             Diameter            Roughness           Minor Loss               Status
+ P-1                  ST-1                 J-1                              570           152.4           0.035               0                 Open   ;
+ P-2                  J-1                  J-2                              350           152.4           0.035               0                 Open   ;
+ P-3                  J-2                  J-3                                1           152.4           0.035               0                 Open   ;
+ P-4                  J-3                  J-4                              600           152.4           0.035               0                 Open   ;
+ P-5                  J-4                  J-5                              650           101.6           0.035               0                 Open   ;
+ P-6                  J-5                  J-6                              400           101.6           0.035               0                 Open   ;
+ P-7                  J-6                  J-7                              150           101.6           0.035               0                 Open   ;
+ P-8                  J-7                  J-8                             1000           101.6           0.035               0                 Open   ;
+ P-9                  J-8                  J-9                               30           101.6           0.035               0                 Open   ;
+ P-10                 J-9                  J-10                            2000            76.2           0.035               0                 Open   ;
+ P-11                 J-10                 J-11                             700            76.2           0.035               0                 Open   ;
+ P-12                 J-1                  J-12                             0.5            76.2           0.035               0                 Open   ;
+ P-13                 J-2                  J-13                            2000            76.2           0.035               0                 Open   ;
+ P-14                 J-3                  J-14                              50            38.1           0.035               0                 Open   ;
+ P-15                 J-4                  J-15                             600            76.2           0.035               0                 Open   ;
+ P-16                 J-5                  J-16                             0.5            50.8           0.035               0                 Open   ;
+ P-17                 J-6                  J-17                             0.5            50.8           0.035               0                 Open   ;
+ P-18                 J-7                  J-18                            1000            50.8           0.035               0                 Open   ;
+ P-19                 J-8                  J-19                            1500            50.8           0.035               0                 Open   ;
+ P-20                 J-9                  J-20                             0.5            50.8           0.035               0                 Open   ;
+ P-21                 J-10                 J-21                             0.5           19.05           0.035               0                 Open   ;
+ P-22                 J-22                 J-24                             900            50.8           0.035               0                 Open   ;
+ P-23                 J-24                 J-25                            1800            50.8           0.035               0                 Open   ;
+ P-24                 J-25                 J-26                             200            50.8           0.035               0                 Open   ;
+ P-25                 J-26                 J-27                             100            50.8           0.035               0                 Open   ;
+ P-26                 J-27                 J-28                             200            50.8           0.035               0                 Open   ;
+ P-27                 J-28                 J-29                             400            50.8           0.035               0                 Open   ;
+ P-28                 J-29                 J-30                             100            50.8           0.035               0                 Open   ;
+ P-29                 J-30                 J-31                             150            50.8           0.035               0                 Open   ;
+ P-30                 J-31                 J-32                              50            50.8           0.035               0                 Open   ;
+ P-31                 J-32                 J-33                              50            50.8           0.035               0                 Open   ;
+ P-32                 J-33                 J-34                              50            50.8           0.035               0                 Open   ;
+ P-33                 J-34                 J-35                             0.5            50.8           0.035               0                 Open   ;
+ P-34                 J-34                 J-36                             0.5            38.1           0.035               0                 Open   ;
+ P-35                 J-24                 J-37                             300            50.8           0.035               0                 Open   ;
+ P-36                 J-25                 J-38                             0.5           19.05           0.035               0                 Open   ;
+ P-37                 J-26                 J-39                             0.5           19.05           0.035               0                 Open   ;
+ P-38                 J-27                 J-40                             0.5           19.05           0.035               0                 Open   ;
+ P-39                 J-28                 J-41                             0.5           19.05           0.035               0                 Open   ;
+ P-40                 J-29                 J-42                             0.5            25.4           0.035               0                 Open   ;
+ P-41                 J-30                 J-43                             0.5            25.4           0.035               0                 Open   ;
+ P-42                 J-31                 J-44                             0.5            50.8           0.035               0                 Open   ;
+ P-43                 J-32                 J-45                             0.5            50.8           0.035               0                 Open   ;
+ P-44                 J-33                 J-46                             0.5            50.8           0.035               0                 Open   ;
+ P-45                 R-1                  ST-1                            3000            76.2           0.035               0                 Open   ;
+
+[PUMPS]
+;ID                   Node1                Node2                Properties          
+
+[VALVES]
+;ID                   Node1                Node2                            Diameter Type              Setting           Minor Loss
+ 1                    J-15                 J-22                            76.2 FCV                1               0   ;
+
+[TAGS]
+;type      name       tag       
+
+[DEMANDS]
+;ID        Demand     Pattern   
+
+[STATUS]
+;ID        Setting   
+1          Open      
+
+[PATTERNS]
+;ID        Multipliers
+
+[CURVES]
+;ID         X-Value      Y-Value     
+
+[CONTROLS]
+
+[RULES]
+
+[ENERGY]
+GLOBAL EFFICIENCY      75.0000
+GLOBAL PRICE           0.0000
+DEMAND CHARGE          0.0000
+
+[EMITTERS]
+;ID        Flow coefficient
+
+[QUALITY]
+
+[SOURCES]
+;Node      Type       Quality    Pattern   
+
+[REACTIONS]
+;Type           Pipe/Tank               Coefficient
+
+ ORDER BULK 1
+ ORDER TANK 1
+ ORDER WALL 1
+ GLOBAL BULK 0.0000    
+ GLOBAL WALL 0.0000    
+ LIMITING POTENTIAL 0.0000    
+ ROUGHNESS CORRELATION 0.0000    
+
+[MIXING]
+;Tank ID             Model Fraction
+
+[TIMES]
+DURATION             24:00:00
+HYDRAULIC TIMESTEP   01:00:00
+QUALITY TIMESTEP     00:05:00
+PATTERN TIMESTEP     01:00:00
+PATTERN START        00:00:00
+REPORT TIMESTEP      01:00:00
+REPORT START         00:00:00
+START CLOCKTIME      00:00:00 AM
+RULE TIMESTEP        00:06:00
+STATISTIC            NONE      
+
+[REPORT]
+SUMMARY    NO
+PAGE       0
+
+[OPTIONS]
+UNITS                LPS                 
+HEADLOSS             D-W                 
+SPECIFIC GRAVITY     1
+VISCOSITY            1
+TRIALS               40
+ACCURACY             0.001
+CHECKFREQ            2
+MAXCHECK             10
+UNBALANCED           CONTINUE 10
+DEMAND MULTIPLIER    1
+DEMAND MODEL         PDA
+MINIMUM PRESSURE     0.00
+REQUIRED PRESSURE    0.10
+PRESSURE EXPONENT    0.5
+EMITTER EXPONENT     0.5
+QUALITY              NONE                
+DIFFUSIVITY          1
+TOLERANCE            0.01
+
+[COORDINATES]
+;Node      X-Coord    Y-Coord   
+J-1             -2350.937000000       8262.351000000
+J-2             -1533.220000000       7989.779000000
+J-3             -1090.290000000       7870.528000000
+J-4               391.823000000       7069.847000000
+J-5              2708.688000000       6456.559000000
+J-6              4105.622000000       5809.199000000
+J-7              5195.911000000       5621.806000000
+J-8              7853.492000000       5076.661000000
+J-9              8756.388000000       4923.339000000
+J-10            12129.472000000       3798.978000000
+J-11            13918.228000000       2810.903000000
+J-12            -1550.256000000       8654.174000000
+J-13             1669.506000000       8909.710000000
+J-14              136.286000000       8143.101000000
+J-15             1345.826000000       5161.840000000
+J-16             4173.765000000       7172.061000000
+J-17             5366.269000000       6354.344000000
+J-18             7785.349000000       6865.417000000
+J-19             9795.571000000       6235.094000000
+J-20             9982.964000000       5638.842000000
+J-21            12981.261000000       4020.443000000
+J-22             2333.901000000       4940.375000000
+J-24             3628.620000000       4616.695000000
+J-25             4582.624000000       4327.087000000
+J-26             5587.734000000       4037.479000000
+J-27             6507.666000000       3713.799000000
+J-28             7785.349000000       3356.048000000
+J-29             8858.603000000       3015.332000000
+J-30             9965.928000000       2572.402000000
+J-31            11192.504000000       2231.687000000
+J-32            12163.543000000       1822.828000000
+J-33            13253.833000000       1533.220000000
+J-34            13918.228000000       1482.112000000
+J-35            14599.659000000       2231.687000000
+J-36            14463.373000000        800.681000000
+J-37             3151.618000000       3918.228000000
+J-38             4173.765000000       3628.620000000
+J-39             5161.840000000       3287.905000000
+J-40             6166.951000000       2998.296000000
+J-41             7376.491000000       2742.760000000
+J-42             8432.709000000       2350.937000000
+J-43            10749.574000000       3270.869000000
+J-44            10954.003000000       1277.683000000
+J-45            11737.649000000       1141.397000000
+J-46            13117.547000000        800.681000000
+R-1             -4752.981000000       9080.068000000
+ST-1            -3509.370000000       8586.031000000
+
+[VERTICES]
+;Link      X-Coord    Y-Coord   
+P-31            13151.618000000       1550.256000000
+P-37             5161.840000000       3219.761000000
+P-37             5178.876000000       3219.761000000
+P-45            -3475.298000000       8671.210000000
+P-45            -3475.298000000       8671.210000000
+
+[LABELS]
+ -1516.184         	9216.354          	"Ngunjiri"
+ 1618.399          	9488.927          	"Ningaini 3"
+ 477.002           	8500.852          	"Ningaini 1.5"
+ 647.359           	7376.491          	"Kiawamururu"
+ 4003.407          	7734.242          	"Kubu Kimunyi"
+ 5298.126          	6916.525          	"Ruruma"
+ 7700.170          	7444.634          	"Matiraini"
+ 9744.463          	6780.239          	"Gatura"
+ 9914.821          	6183.986          	"Mbari ya njue"
+ 12810.903         	4616.695          	"Ithimaini"
+ 13781.942         	3356.048          	"Kaheti Boys"
+ 1856.899          	5451.448          	"Muhoro"
+ 2163.543          	3952.300          	"Kiawaita"
+ 3100.511          	3577.513          	"Mathenge"
+ 4071.550          	3270.869          	"Mary Imm"
+ 5434.412          	3032.368          	"Kaheti"
+ 6541.738          	2759.796          	"Kibaara"
+ 7649.063          	2487.223          	"Ithanji"
+ 9267.462          	3662.692          	"Mbari ya Karue"
+ 9676.320          	1431.005          	"Kaheti Girls"
+ 10988.075         	1158.433          	"Karoro"
+ 11754.685         	834.753           	"Rev. Muhoro"
+ 13475.298         	715.503           	"Mbari ya Muita"
+ 13151.618         	2470.187          	"Mbari ya Ngai"
+
+[BACKDROP]
+DIMENSIONS    0.000    0.000    10000.000    10000.000
+UNITS    NONE
+OFFSET    0.00    0.00
+
+[END]
