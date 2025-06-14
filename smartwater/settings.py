@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,7 +27,8 @@ SECRET_KEY = "django-insecure-k=z0h^x5-7&g2-+w11-i%fzeoxlx2m^zsq%j%ehoa*80xs7v6(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['smartwater-x4ql.onrender.com', 'localhost', '127.0.0.1']
+
 
 
 # Application definition
