@@ -18,26 +18,26 @@
       </div>
       <div class="card-body">
         <div class="metric">
-          <span class="metric-value">{{ pressure_stats.avg|floatformat:2 }} psi</span>
+          <span class="metric-value">{{ pressure_stats.avg|default:"0"|floatformat:2 }} psi</span>
           <span class="metric-label">Average Pressure</span>
         </div>
         <div class="metric-row">
           <div class="metric">
-            <span class="metric-value">{{ node_count }}</span>
+            <span class="metric-value">{{ node_count|default:"0" }}</span>
             <span class="metric-label">Nodes</span>
           </div>
           <div class="metric">
-            <span class="metric-value">{{ link_count }}</span>
+            <span class="metric-value">{{ link_count|default:"0" }}</span>
             <span class="metric-label">Pipes</span>
           </div>
         </div>
         <div class="pressure-visual">
           <div class="pressure-bar" style="width: 100%; background: linear-gradient(to right, #e74c3c, #f39c12, #2ecc71);">
-            <div class="pressure-indicator" style="left: {% widthratio pressure_stats.avg pressure_stats.max 100 %}%"></div>
+            <div class="pressure-indicator" style="left: {% widthratio pressure_stats.avg|default:0 pressure_stats.max|default:1 100 %}%"></div>
           </div>
           <div class="pressure-labels">
-            <span>{{ pressure_stats.min|floatformat:0 }}</span>
-            <span>{{ pressure_stats.max|floatformat:0 }}</span>
+            <span>{{ pressure_stats.min|default:"0"|floatformat:0 }}</span>
+            <span>{{ pressure_stats.max|default:"100"|floatformat:0 }}</span>
           </div>
         </div>
       </div>
@@ -51,16 +51,16 @@
       </div>
       <div class="card-body">
         <div class="metric">
-          <span class="metric-value">{{ valves|length }}</span>
+          <span class="metric-value">{{ valves|length|default:"0" }}</span>
           <span class="metric-label">Recommended Valves</span>
         </div>
         <div class="metric-row">
           <div class="metric">
-            <span class="metric-value">{{ improvement_stats.pressure_variation_reduction|floatformat:1 }}%</span>
+            <span class="metric-value">{{ improvement_stats.pressure_variation_reduction|default:"0"|floatformat:1 }}%</span>
             <span class="metric-label">Pressure Reduction</span>
           </div>
           <div class="metric">
-            <span class="metric-value">{{ improvement_stats.energy_savings|floatformat:1 }}%</span>
+            <span class="metric-value">{{ improvement_stats.energy_savings|default:"0"|floatformat:1 }}%</span>
             <span class="metric-label">Energy Savings</span>
           </div>
         </div>
@@ -78,16 +78,16 @@
       </div>
       <div class="card-body">
         <div class="metric">
-          <span class="metric-value">{{ result.performance_metrics.demand_coverage|floatformat:1 }}%</span>
+          <span class="metric-value">{{ result.performance_metrics.demand_coverage|default:"0"|floatformat:1 }}%</span>
           <span class="metric-label">Demand Coverage</span>
         </div>
         <div class="metric-row">
           <div class="metric">
-            <span class="metric-value">{{ result.performance_metrics.energy_savings|floatformat:1 }}%</span>
+            <span class="metric-value">{{ result.performance_metrics.energy_savings|default:"0"|floatformat:1 }}%</span>
             <span class="metric-label">Energy Savings</span>
           </div>
           <div class="metric">
-            <span class="metric-value">{{ result.performance_metrics.pressure_variation|floatformat:1 }} m</span>
+            <span class="metric-value">{{ result.performance_metrics.pressure_variation|default:"0"|floatformat:1 }} m</span>
             <span class="metric-label">Pressure Variation</span>
           </div>
         </div>
@@ -107,18 +107,18 @@
     <div class="chart-row">
       <div class="chart-container">
         <h4>Pressure Comparison (Before/After)</h4>
-        <canvas id="pressureComparisonChart"></canvas>
+        <canvas id="pressureComparisonChart" width="400" height="300"></canvas>
       </div>
       <div class="chart-container">
         <h4>Flow Rate Optimization</h4>
-        <canvas id="flowOptimizationChart"></canvas>
+        <canvas id="flowOptimizationChart" width="400" height="300"></canvas>
       </div>
     </div>
 
     <div class="chart-row full-width">
       <div class="chart-container">
         <h4>Demand vs Control (MPC)</h4>
-        <canvas id="demandControlChart"></canvas>
+        <canvas id="demandControlChart" width="800" height="300"></canvas>
       </div>
     </div>
   </div>
@@ -163,6 +163,10 @@
                   </span>
                 </td>
               </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" class="text-center">No hydraulic data available</td>
+              </tr>
               {% endfor %}
             </tbody>
           </table>
@@ -184,14 +188,18 @@
             <tbody>
               {% for valve in valves %}
               <tr>
-                <td>{{ valve.location }}</td>
-                <td>{{ valve.pipe_id }}</td>
-                <td>{{ valve.pressure_reduction|floatformat:2 }} m</td>
+                <td>{{ valve.location|default:"N/A" }}</td>
+                <td>{{ valve.pipe_id|default:"N/A" }}</td>
+                <td>{{ valve.pressure_reduction|default:"0"|floatformat:2 }} m</td>
                 <td>
-                  <span class="status-badge priority-{{ valve.priority|lower }}">
-                    {{ valve.priority }}
+                  <span class="status-badge priority-{{ valve.priority|lower|default:'medium' }}">
+                    {{ valve.priority|default:"Medium" }}
                   </span>
                 </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center">No valve optimization data available</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -214,12 +222,16 @@
             <tbody>
               {% for hour in hourly_data %}
               <tr>
-                <td>{{ hour.hour }}</td>
-                <td>{{ hour.forecast|floatformat:2 }}</td>
-                <td>{{ hour.control|floatformat:2 }}</td>
+                <td>{{ hour.hour|default:"0" }}</td>
+                <td>{{ hour.forecast|default:"0"|floatformat:2 }}</td>
+                <td>{{ hour.control|default:"0"|floatformat:2 }}</td>
                 <td class="{% if hour.deviation >= 0 %}positive{% else %}negative{% endif %}">
-                  {{ hour.deviation|floatformat:2 }}%
+                  {{ hour.deviation|default:"0"|floatformat:2 }}%
                 </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center">No MPC control data available</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -444,11 +456,6 @@
     font-size: 1.1rem;
   }
 
-  .chart-container canvas {
-    width: 100% !important;
-    height: 300px !important;
-  }
-
   /* Tabs */
   .results-tabs {
     margin-top: 1rem;
@@ -514,6 +521,10 @@
 
   .results-table tr:hover {
     background-color: #f8f9fa;
+  }
+
+  .text-center {
+    text-align: center;
   }
 
   /* Status Badges */
@@ -621,7 +632,7 @@
   }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // Tab functionality
@@ -639,232 +650,299 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Valve Priority Chart
-  const valvePriorityCtx = document.getElementById('valvePriorityChart').getContext('2d');
-  const valvePriorityChart = new Chart(valvePriorityCtx, {
-    type: 'doughnut',
-    data: {
-      labels: ['High', 'Medium', 'Low'],
-      datasets: [{
-        data: [
-          {{ valves|filter_priority:"High"|length }},
-          {{ valves|filter_priority:"Medium"|length }},
-          {{ valves|filter_priority:"Low"|length }}
-        ],
-        backgroundColor: [
-          'rgba(231, 76, 60, 0.8)',
-          'rgba(241, 196, 15, 0.8)',
-          'rgba(46, 204, 113, 0.8)'
-        ],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'right'
-        }
-      },
-      cutout: '70%'
+  // Helper function to safely get data or return default
+  function getDataOrDefault(data, defaultValue = []) {
+    try {
+      if (data && Array.isArray(data)) return data;
+      if (typeof data === 'string') return JSON.parse(data);
+      return defaultValue;
+    } catch (e) {
+      return defaultValue;
     }
-  });
+  }
+
+  // Valve Priority Chart
+  const valvePriorityCtx = document.getElementById('valvePriorityChart');
+  if (valvePriorityCtx) {
+    try {
+      new Chart(valvePriorityCtx.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: ['High', 'Medium', 'Low'],
+          datasets: [{
+            data: [
+              {{ valves|filter_priority:"High"|length|default:"0" }},
+              {{ valves|filter_priority:"Medium"|length|default:"0" }},
+              {{ valves|filter_priority:"Low"|length|default:"0" }}
+            ],
+            backgroundColor: [
+              'rgba(231, 76, 60, 0.8)',
+              'rgba(241, 196, 15, 0.8)',
+              'rgba(46, 204, 113, 0.8)'
+            ],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right'
+            }
+          },
+          cutout: '70%'
+        }
+      });
+    } catch (e) {
+      console.error('Error creating valve priority chart:', e);
+    }
+  }
 
   // MPC Performance Chart
-  const mpcPerformanceCtx = document.getElementById('mpcPerformanceChart').getContext('2d');
-  const mpcPerformanceChart = new Chart(mpcPerformanceCtx, {
-    type: 'bar',
-    data: {
-      labels: ['Demand Coverage', 'Energy Savings', 'Pressure Control'],
-      datasets: [{
-        data: [
-          {{ result.performance_metrics.demand_coverage }},
-          {{ result.performance_metrics.energy_savings }},
-          100 - {{ result.performance_metrics.pressure_variation }}
-        ],
-        backgroundColor: [
-          'rgba(52, 152, 219, 0.8)',
-          'rgba(46, 204, 113, 0.8)',
-          'rgba(155, 89, 182, 0.8)'
-        ],
-        borderWidth: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100
+  const mpcPerformanceCtx = document.getElementById('mpcPerformanceChart');
+  if (mpcPerformanceCtx) {
+    try {
+      new Chart(mpcPerformanceCtx.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: ['Demand Coverage', 'Energy Savings', 'Pressure Control'],
+          datasets: [{
+            data: [
+              {{ result.performance_metrics.demand_coverage|default:"0" }},
+              {{ result.performance_metrics.energy_savings|default:"0" }},
+              {{ 100|sub:result.performance_metrics.pressure_variation|default:"0" }}
+            ],
+            backgroundColor: [
+              'rgba(52, 152, 219, 0.8)',
+              'rgba(46, 204, 113, 0.8)',
+              'rgba(155, 89, 182, 0.8)'
+            ],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            }
+          }
         }
-      },
-      plugins: {
-        legend: {
-          display: false
-        }
-      }
+      });
+    } catch (e) {
+      console.error('Error creating MPC performance chart:', e);
     }
-  });
+  }
 
   // Pressure Comparison Chart
-  const pressureComparisonCtx = document.getElementById('pressureComparisonChart').getContext('2d');
-  const pressureComparisonChart = new Chart(pressureComparisonCtx, {
-    type: 'bar',
-    data: {
-      labels: {{ pressure_comparison.labels|safe }},
-      datasets: [
-        {
-          label: 'Before Optimization',
-          data: {{ pressure_comparison.original|safe }},
-          backgroundColor: 'rgba(231, 76, 60, 0.7)'
+  const pressureComparisonCtx = document.getElementById('pressureComparisonChart');
+  if (pressureComparisonCtx) {
+    try {
+      const pressureLabels = getDataOrDefault({{ pressure_comparison.labels|default:"[]"|safe }});
+      const pressureOriginal = getDataOrDefault({{ pressure_comparison.original|default:"[]"|safe }});
+      const pressureOptimized = getDataOrDefault({{ pressure_comparison.optimized|default:"[]"|safe }});
+      
+      // Limit to 10 data points if too many
+      const displayCount = Math.min(10, pressureLabels.length);
+      const displayLabels = pressureLabels.slice(0, displayCount);
+      const displayOriginal = pressureOriginal.slice(0, displayCount);
+      const displayOptimized = pressureOptimized.slice(0, displayCount);
+      
+      new Chart(pressureComparisonCtx.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: displayLabels,
+          datasets: [
+            {
+              label: 'Before Optimization',
+              data: displayOriginal,
+              backgroundColor: 'rgba(231, 76, 60, 0.7)'
+            },
+            {
+              label: 'After Optimization',
+              data: displayOptimized,
+              backgroundColor: 'rgba(46, 204, 113, 0.7)'
+            }
+          ]
         },
-        {
-          label: 'After Optimization',
-          data: {{ pressure_comparison.optimized|safe }},
-          backgroundColor: 'rgba(46, 204, 113, 0.7)'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: false,
-          title: {
-            display: true,
-            text: 'Pressure (psi)'
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Pressure (psi)'
+              }
+            }
           }
         }
-      }
+      });
+    } catch (e) {
+      console.error('Error creating pressure comparison chart:', e);
     }
-  });
+  }
 
   // Flow Optimization Chart
-  const flowOptimizationCtx = document.getElementById('flowOptimizationChart').getContext('2d');
-  const flowOptimizationChart = new Chart(flowOptimizationCtx, {
-    type: 'line',
-    data: {
-      labels: Array.from({length: 24}, (_, i) => i),
-      datasets: [
-        {
-          label: 'Original Flow',
-          data: Array.from({length: 24}, () => Math.random() * 50 + 20),
-          borderColor: '#e74c3c',
-          backgroundColor: 'rgba(231, 76, 60, 0.1)',
-          tension: 0.3
+  const flowOptimizationCtx = document.getElementById('flowOptimizationChart');
+  if (flowOptimizationCtx) {
+    try {
+      new Chart(flowOptimizationCtx.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: Array.from({length: 24}, (_, i) => i),
+          datasets: [
+            {
+              label: 'Original Flow',
+              data: Array.from({length: 24}, () => Math.random() * 50 + 20),
+              borderColor: '#e74c3c',
+              backgroundColor: 'rgba(231, 76, 60, 0.1)',
+              tension: 0.3
+            },
+            {
+              label: 'Optimized Flow',
+              data: Array.from({length: 24}, () => Math.random() * 30 + 30),
+              borderColor: '#2ecc71',
+              backgroundColor: 'rgba(46, 204, 113, 0.1)',
+              tension: 0.3
+            }
+          ]
         },
-        {
-          label: 'Optimized Flow',
-          data: Array.from({length: 24}, () => Math.random() * 30 + 30),
-          borderColor: '#2ecc71',
-          backgroundColor: 'rgba(46, 204, 113, 0.1)',
-          tension: 0.3
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: false,
-          title: {
-            display: true,
-            text: 'Flow Rate (gpm)'
-          }
-        },
-        x: {
-          title: {
-            display: true,
-            text: 'Hour'
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Flow Rate (gpm)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Hour'
+              }
+            }
           }
         }
-      }
+      });
+    } catch (e) {
+      console.error('Error creating flow optimization chart:', e);
     }
-  });
+  }
 
   // Demand vs Control Chart
-  const demandControlCtx = document.getElementById('demandControlChart').getContext('2d');
-  const demandControlChart = new Chart(demandControlCtx, {
-    type: 'line',
-    data: {
-      labels: {{ demand_control_comparison.hours|safe }},
-      datasets: [
-        {
-          label: 'Demand Forecast',
-          data: {{ demand_control_comparison.forecast_demand|safe }},
-          borderColor: '#3498db',
-          backgroundColor: 'rgba(52, 152, 219, 0.1)',
-          tension: 0.3
+  const demandControlCtx = document.getElementById('demandControlChart');
+  if (demandControlCtx) {
+    try {
+      const demandHours = getDataOrDefault({{ demand_control_comparison.hours|default:"[]"|safe }});
+      const forecastDemand = getDataOrDefault({{ demand_control_comparison.forecast_demand|default:"[]"|safe }});
+      const controlledFlow = getDataOrDefault({{ demand_control_comparison.controlled_flow|default:"[]"|safe }});
+      
+      new Chart(demandControlCtx.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: demandHours,
+          datasets: [
+            {
+              label: 'Demand Forecast',
+              data: forecastDemand,
+              borderColor: '#3498db',
+              backgroundColor: 'rgba(52, 152, 219, 0.1)',
+              tension: 0.3
+            },
+            {
+              label: 'Optimal Control',
+              data: controlledFlow,
+              borderColor: '#9b59b6',
+              backgroundColor: 'rgba(155, 89, 182, 0.1)',
+              tension: 0.3
+            }
+          ]
         },
-        {
-          label: 'Optimal Control',
-          data: {{ demand_control_comparison.controlled_flow|safe }},
-          borderColor: '#9b59b6',
-          backgroundColor: 'rgba(155, 89, 182, 0.1)',
-          tension: 0.3
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: 'Flow Rate (m³/h)'
-          }
-        },
-        x: {
-          title: {
-            display: true,
-            text: 'Time (hours)'
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Flow Rate (m³/h)'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Time (hours)'
+              }
+            }
           }
         }
-      }
+      });
+    } catch (e) {
+      console.error('Error creating demand control chart:', e);
     }
-  });
+  }
 
   // Export All Data functionality
-  document.getElementById('exportAllData').addEventListener('click', function() {
-    // Create CSV content
-    let csvContent = "data:text/csv;charset=utf-8,";
-    
-    // Hydraulic Data
-    csvContent += "Hydraulic Analysis Results\n";
-    csvContent += "Node ID,Pressure (psi),Status\n";
-    {% for node_id, pressure in pressures.items %}
-    csvContent += `"{{ node_id }}",{{ pressure|floatformat:2 }},{% if pressure < 20 %}Low{% elif pressure > 80 %}High{% else %}Normal{% endif %}\n`;
-    {% endfor %}
-    
-    // Valve Data
-    csvContent += "\nValve Optimization Results\n";
-    csvContent += "Location,Pipe ID,Pressure Reduction,Priority\n";
-    {% for valve in valves %}
-    csvContent += `"{{ valve.location }}","{{ valve.pipe_id }}",{{ valve.pressure_reduction|floatformat:2 }},"{{ valve.priority }}"\n`;
-    {% endfor %}
-    
-    // MPC Data
-    csvContent += "\nMPC Control Results\n";
-    csvContent += "Hour,Forecast Demand,Optimal Control,Deviation\n";
-    {% for hour in hourly_data %}
-    csvContent += `{{ hour.hour }},{{ hour.forecast|floatformat:2 }},{{ hour.control|floatformat:2 }},{{ hour.deviation|floatformat:2 }}\n`;
-    {% endfor %}
-    
-    // Create download link
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "water_network_analysis_results.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  });
+  const exportBtn = document.getElementById('exportAllData');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', function() {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      
+      // Hydraulic Data
+      csvContent += "Hydraulic Analysis Results\n";
+      csvContent += "Node ID,Pressure (psi),Status\n";
+      {% for node_id, pressure in pressures.items %}
+      csvContent += `"{{ node_id }}",{{ pressure|floatformat:2 }},{% if pressure < 20 %}Low{% elif pressure > 80 %}High{% else %}Normal{% endif %}\n`;
+      {% empty %}
+      csvContent += "No hydraulic data available\n";
+      {% endfor %}
+      
+      // Valve Data
+      csvContent += "\nValve Optimization Results\n";
+      csvContent += "Location,Pipe ID,Pressure Reduction,Priority\n";
+      {% for valve in valves %}
+      csvContent += `"{{ valve.location|default:"N/A" }}","{{ valve.pipe_id|default:"N/A" }}",{{ valve.pressure_reduction|default:"0"|floatformat:2 }},"{{ valve.priority|default:"Medium" }}"\n`;
+      {% empty %}
+      csvContent += "No valve optimization data available\n";
+      {% endfor %}
+      
+      // MPC Data
+      csvContent += "\nMPC Control Results\n";
+      csvContent += "Hour,Forecast Demand,Optimal Control,Deviation\n";
+      {% for hour in hourly_data %}
+      csvContent += `{{ hour.hour|default:"0" }},{{ hour.forecast|default:"0"|floatformat:2 }},{{ hour.control|default:"0"|floatformat:2 }},{{ hour.deviation|default:"0"|floatformat:2 }}\n`;
+      {% empty %}
+      csvContent += "No MPC control data available\n";
+      {% endfor %}
+      
+      try {
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "water_network_analysis_results.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        console.error('Error exporting data:', e);
+        alert('Error exporting data. Please check console for details.');
+      }
+    });
+  }
 });
 </script>
 {% endblock %}
