@@ -42,67 +42,74 @@ def hydraulic_analysis(request, network_id):
         wn = wntr.network.WaterNetworkModel(network.file.path)
         sim = wntr.sim.EpanetSimulator(wn)
         results = sim.run_sim()
+
+        # Process pressure data
+        all_pressures = results.node['pressure']
+        mean_pressures = {node: round(float(p), 2) for node, p in all_pressures.mean().items()}
         
-        pressures = results.node['pressure'].mean().to_dict()
-        flows = results.link['flowrate'].mean().to_dict()
-        velocities = results.link['velocity'].mean().to_dict()
+        # Process flow data
+        all_flows = results.link['flowrate']
+        mean_flows = {pipe: round(float(abs(f)), 4) for pipe, f in all_flows.mean().items()}
+
+        # Prepare data for charts
+        time_steps = [str(t) for t in all_pressures.index]
         
-        pressure_values = list(pressures.values())
-        flow_values = [abs(f) for f in flows.values()]
-        
-        pressure_stats = {
-            'min': round(min(pressure_values)),
-            'max': round(max(pressure_values)),
-            'avg': round(sum(pressure_values) / len(pressure_values))
-        }
-        
-        flow_stats = {
-            'min': round(min(flow_values)),
-            'max': round(max(flow_values)),
-            'avg': round(sum(flow_values) / len(flow_values))
-        }
-        
-        flow_chart_data = {
-            'labels': [f"Pipe {pipe_id}" for pipe_id in flows.keys()],
-            'data': [round(abs(flow)) for flow in flows.values()]
-        }
-        
-        time_steps = results.node['pressure'].index
-        sample_nodes = list(pressures.keys())[:5]
-        
-        pressure_time_series = {
-            'times': [str(t) for t in time_steps],
-            'data': {
-                node: [round(pressures[node] * (0.8 + 0.4 * (i % 24)/24)) for i in range(len(time_steps))] 
-                for node in sample_nodes
+        # Select representative samples (for performance)
+        node_sample = list(mean_pressures.keys())[:20]  # First 20 nodes
+        pipe_sample = list(mean_flows.keys())[:20]      # First 20 pipes
+
+        # Convert data to JSON-serializable format
+        def prepare_chart_data(data_dict, sample_keys, precision=2):
+            return {
+                'labels': list(data_dict.keys()),
+                'data': [round(float(v), precision) for v in data_dict.values()],
+                'sample': {
+                    'labels': sample_keys,
+                    'data': [round(float(data_dict[k]), precision) for k in sample_keys]
+                }
             }
-        }
-        
-        flow_time_series = {
-            'times': [str(t) for t in time_steps],
-            'data': {
-                link: [round(abs(flows[link]) * (0.6 + 0.8 * (i % 24)/24)) for i in range(len(time_steps))]
-                for link in list(flows.keys())[:20]
+
+        pressure_data = prepare_chart_data(mean_pressures, node_sample)
+        flow_data = prepare_chart_data(mean_flows, pipe_sample, 4)
+
+        # Time series data
+        def prepare_time_series(data_df, sample_keys, precision=2):
+            return {
+                'times': time_steps,
+                'data': {
+                    k: [round(float(v), precision) for v in data_df[k].values]
+                    for k in sample_keys
+                }
             }
-        }
-        
+
+        pressure_time_series = prepare_time_series(all_pressures, node_sample)
+        flow_time_series = prepare_time_series(all_flows.abs(), pipe_sample, 4)
+
         return render(request, 'analysis/hydraulic.html', {
             'network': network,
-            'pressures': {k: round(v) for k, v in pressures.items()},
-            'flows': {k: round(abs(v)) for k, v in flows.items()},
-            'velocities': {k: round(v, 2) for k, v in velocities.items()},
-            'pressure_stats': pressure_stats,
-            'flow_stats': flow_stats,
-            'flow_chart_data': flow_chart_data,
+            'pressures': mean_pressures,
+            'flows': mean_flows,
+            'pressure_stats': {
+                'min': round(float(all_pressures.min().min()), 2),
+                'max': round(float(all_pressures.max().max()), 2),
+                'avg': round(float(all_pressures.mean().mean()), 2)
+            },
+            'flow_stats': {
+                'min': round(float(all_flows.abs().min().min()), 4),
+                'max': round(float(all_flows.abs().max().max()), 4),
+                'avg': round(float(all_flows.abs().mean().mean()), 4)
+            },
             'node_count': len(wn.nodes),
             'link_count': len(wn.links),
             'simulation_time': datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            'pressure_chart_data': json.dumps(pressure_data),
+            'flow_chart_data': json.dumps(flow_data),
             'pressure_time_series': json.dumps(pressure_time_series),
             'flow_time_series': json.dumps(flow_time_series)
         })
-        
+
     except Exception as e:
-        logger.error(f"Hydraulic analysis failed: {str(e)}")
+        logger.error(f"Hydraulic analysis failed: {str(e)}", exc_info=True)
         messages.error(request, "Analysis failed. Please check the network file.")
         return redirect('analysis:index')
 
@@ -288,12 +295,69 @@ def analysis_view(request):
         else:
             networks = WaterNetwork.objects.none()
             
+        # Create a mock result dictionary with all required keys
+        result = {
+            'performance_metrics': {
+                'demand_coverage': 0,
+                'energy_savings': 0,
+                'pressure_variation': 0
+            }
+        }
+        
+        # Create mock improvement stats
+        improvement_stats = {
+            'pressure_variation_reduction': 0,
+            'energy_savings': 0
+        }
+        
+        # Create mock pressure stats
+        pressure_stats = {
+            'min': 0,
+            'max': 0,
+            'avg': 0
+        }
+        
         return render(request, 'analysis/analysis.html', {
             'networks': networks,
-            'total_networks': networks.count()
+            'total_networks': networks.count(),
+            'result': result,
+            'improvement_stats': improvement_stats,
+            'pressure_stats': pressure_stats,
+            'node_count': 0,
+            'link_count': 0,
+            'pressures': {},
+            'valves': [],
+            'hourly_data': [],
+            'pressure_comparison': json.dumps({'labels': [], 'original': [], 'optimized': []}),
+            'demand_control_comparison': json.dumps({'hours': [], 'forecast_demand': [], 'controlled_flow': []}),
+            'analysis_date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            'simulation_time': datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
         })
         
     except Exception as e:
         logger.error(f"Analysis view error: {str(e)}", exc_info=True)
         messages.error(request, "Could not load analysis page.")
-        return render(request, 'analysis/analysis.html', {'networks': []})
+        return render(request, 'analysis/analysis.html', {
+            'networks': [],
+            'result': {
+                'performance_metrics': {
+                    'demand_coverage': 0,
+                    'energy_savings': 0,
+                    'pressure_variation': 0
+                }
+            },
+            'improvement_stats': {
+                'pressure_variation_reduction': 0,
+                'energy_savings': 0
+            },
+            'pressure_stats': {
+                'min': 0,
+                'max': 0,
+                'avg': 0
+            },
+            'node_count': 0,
+            'link_count': 0,
+            'pressures': {},
+            'valves': [],
+            'hourly_data': []
+        })
